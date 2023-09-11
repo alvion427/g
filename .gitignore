@@ -1,0 +1,14 @@
+__pycache__
+venv
+g_local_config.py
+docs/
+
+#flask
+.cache
+
+#pycharm
+.idea
+
+#sublime
+*.sublime-project
+*.sublime-workspace

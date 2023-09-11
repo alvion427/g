@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stream {{stream}}</title>
+</head>
+<body onload="window.scrollTo(0,document.body.scrollHeight);">
+
+<style>
+    pre {
+        white-space: pre-wrap;
+    }
+</style>
+
+<h1>Stream: {{stream}}</h1>
+
+{% for message in messages %}
+    {% if message["role"] == "assistant" %}
+        {% set color = "red" %}
+    {% else %}
+        {% set color = "blue" %}
+    {% endif %}
+    <pre><b><font color="{{color}}">{{ message["role"] }}:</font></b>  {{ message["content"] }}</pre>
+{% endfor %}
+
+<form action="{{ config.host + 'stream/' + stream }}" method="get" onSubmit="document.getElementById('submit').disabled=true;">
+    <lable align="top" for="question"><b>Question:</b></lable><br/>
+    <textarea name="question" id="question" rows="8" cols="100" value="{{ existingQuestion }}"></textarea><br/>
+    <input type="hidden" name="hash" value="{{ hash }}"/>
+    <input id="submit" type="submit" value="Ask"/>
+</form>
+
+</table>
+</body>
+</html>
