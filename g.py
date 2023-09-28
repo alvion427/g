@@ -13,6 +13,14 @@ def getDataDir():
   else:
     return os.path.expanduser("~/.gee")
 
+def getSystemPrompt(system):
+  sysPath = os.path.join(getDataDir(), "system_prompts", f"{system}.txt")
+  if os.path.exists(sysPath):
+    with open(sysPath, 'r') as file:
+      return file.read()
+  else:
+    return system
+
 def listStreams():
   dataDir = getDataDir()
   if os.path.isdir(dataDir):
@@ -69,6 +77,7 @@ def parseArgs():
   parser.add_argument('-m', '--model', action='store', dest='model', default=g_config.model, type=str, help='Use specific model')
   parser.add_argument('-l', '--log', action='store_true', dest='log', default=True, help='Whether or not to log requests')
   parser.add_argument('-i', '--interactive', action='store_true', default=False, help='Continue prompting after first reply.  Defaults to true unless you pass an initial prompt')
+  parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Verbose output')
 
   # parse all remaining positional arguments as a list
   parser.add_argument('args', nargs=argparse.REMAINDER)
@@ -86,7 +95,7 @@ def chat(args, messages, docType, initialPrompt="", onlyOnce=False):
       initialPrompt = None
     else:
       try:
-        prompt = input("\nEnter prompt: ")
+        prompt = input("\nPrompt: ")
       except KeyboardInterrupt:
         return
 
@@ -118,6 +127,7 @@ def chat(args, messages, docType, initialPrompt="", onlyOnce=False):
     if onlyOnce:
       break
 
+
 def main():
   args = parseArgs()
 
@@ -130,6 +140,12 @@ def main():
       print(s)
     return
 
+  systemPrompt = None
+  if args.system:
+    args.system = getSystemPrompt(args.system)
+    if args.verbose:
+      print("Using system prompt: " + args.system)
+
   initialPrompt = ' '.join(args.args)
   messages = []
 
@@ -140,6 +156,14 @@ def main():
     # streams are stored as a list of role/content pairs
     print(f"Reading stream from {args.stream}.txt")
     messages = readStream(args.stream)
+    if args.system:
+      if len(messages) == 0:
+        messages.append(llm.Message("system", args.system))
+      elif messages[0].role != "system" or messages[0].content != args.system:
+        print(f"ERROR: Can't change system prompt for stream '{args.stream}'")
+        return
+  elif args.system:
+    messages.append(llm.Message("system", args.system))
 
   chat(args, messages, docType, initialPrompt=initialPrompt, onlyOnce=onlyOnce)
 
